@@ -95,7 +95,9 @@ impl ConfigBlock for Watson {
             // previous state file and then renames the new state file. This means that we're
             // always looking for `CREATE` events with the name of the state file.
             notify
-                .add_watch(&parent_dir, WatchMask::CREATE)
+                .add_watch(&parent_dir,
+                    WatchMask::CREATE | WatchMask::MOVED_TO
+                    )
                 .expect("failed to watch watson state file");
 
             let mut buffer = [0; 1024];
@@ -106,7 +108,7 @@ impl ConfigBlock for Watson {
 
                 for event in events {
                     match event.mask {
-                        EventMask::CREATE if event.name == Some(&file_name) => {
+                        EventMask::CREATE | EventMask::MOVED_TO if event.name == Some(&file_name) => {
                             tx_update_request
                                 .send(Task {
                                     id,
